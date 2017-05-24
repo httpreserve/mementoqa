@@ -12,7 +12,7 @@ import (
 )
 
 var screenshot = false
-var port = "2042"
+var port = "8080"
 
 func init() {
 	if ps.Hello() {

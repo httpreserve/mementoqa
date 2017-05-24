@@ -2,7 +2,7 @@
 
 Prototype: QA Mementos using Screenshots
 
-[On HTTPreserve.info](http://httpreserve.info:8080/)
+On [HTTPreserve.info](http://httpreserve.info:8080/)
 
 ### Example
 

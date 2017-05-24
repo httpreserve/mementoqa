@@ -6,10 +6,13 @@ import (
 	sr "github.com/httpreserve/simplerequest"
 	"log"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
-	"time"
 )
+
+var screenshot = false
+var port = "2042"
 
 func init() {
 	if ps.Hello() {
@@ -34,19 +37,16 @@ var memes []timemap
 
 const datelayout = "20060102150405"
 
-func GetPotentialURL(archiveurl string) string {
-
+func getPotentialURL(archiveurl string, uri string, date string) string {
 	base := strings.Split(archiveurl, "timemap")[0]
-	oldestDate := time.Date(1900, time.August, 31, 23, 13, 0, 0, time.Local).Format(datelayout)
-
-	return base + oldestDate + "/" + originalURI
+	return base + date + "/" + uri
 }
 
 const wedoitbase = "http://labs.mementoweb.org/timemap/json/"
 const base = "http://timetravel.mementoweb.org/timemap/json/"
 
-func makeTimemap(url string) string {
-	return base + url
+func makeTimemap(uri string) string {
+	return base + uri
 }
 
 func recurseInterface(f interface{}) {
@@ -109,11 +109,11 @@ func manageURIExceptions(oldURI, newURI string) string {
 	return newURI
 }
 
-func addDateURIs(mementos []timemap) {
+func addDateURIs(mementos []timemap, url string, date string) {
 	for i := range mementos {
 		if mementos[i].uri != "" {
 			if mementos[i].compliant {
-				uri := GetPotentialURL(mementos[i].uri)
+				uri := getPotentialURL(mementos[i].uri, url, date)
 				resp, err := makeSimpleRequest(uri)
 				if err != nil {
 					log.Println("error making simplerequest for archival uri")
@@ -127,6 +127,8 @@ func addDateURIs(mementos []timemap) {
 			}
 		}
 	}
+
+	log.Println("Results for:", len(mementos), "potential mementos")
 }
 
 func getTimemap(uri string) ([]timemap, error) {
@@ -153,6 +155,30 @@ func makeSimpleRequest(uri string) (sr.SimpleResponse, error) {
 		return sr.SimpleResponse{}, err
 	}
 	return resp, nil
+}
+
+func makeScreenshots(m []timemap) {
+
+	log.Println("making screenshots")
+
+	var count int
+
+	//make archived screenshots...
+	var err error
+	for x := range m {
+		if m[x].uri != "" && m[x].compliant && m[x].resolved != false && screenshot {
+			m[x].screenshot, err = ps.GrabScreenshot(m[x].uri)
+			if err != nil {
+				log.Println("error creating screenshot for ", m[x].uri, err)
+			} else {
+				count++
+				m[x].captured = true
+			}
+		}
+	}
+
+	log.Println(strconv.Itoa(count), "screenshots made")
+
 }
 
 func maketable(mementos []timemap) string {
@@ -204,7 +230,7 @@ func maketable(mementos []timemap) string {
 	return noncomp + "<br/>" + oth + "<br/><b>Good Timegates</b><br/>" + tab
 }
 
-func timegate() string {
+func timegate(url string, date string) string {
 	//1. maketimemap for baseuri
 	//2. extract from timemap
 	//3, for compliant urls get next date for form date
@@ -212,33 +238,16 @@ func timegate() string {
 	//5. display, in table...
 
 	//get timemap data...
-	m, _ := getTimemap(makeTimemap(originalURI))
+	m, _ := getTimemap(makeTimemap(url))
 
-	//get the date of the snapshot in the archive closest to that
-	//we requested...
-	addDateURIs(m)
+	//get the date of the snapshot in the archive closest to that we requested...
+	addDateURIs(m, url, date)
 
-	//make archived screenshots...
-	var err error
-	for x := range m {
-		if m[x].uri != "" && m[x].compliant && m[x].resolved != false && screenshot {
-			m[x].screenshot, err = ps.GrabScreenshot(m[x].uri)
-			if err != nil {
-				log.Println("error creating screenshot for ", m[x].uri, err)
-			} else {
-				m[x].captured = true
-			}
-		}
-	}
-
-	log.Println("Results for:", len(m), "potential mementos")
+	//make screenshots
+	makeScreenshots(m)
 
 	return maketable(m)
 }
-
-var originalURI = "http://www.archives.govt.nz"
-var screenshot = false
-var port = "2042"
 
 func main() {
 

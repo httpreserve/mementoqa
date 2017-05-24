@@ -9,7 +9,10 @@ import (
 	"net/http"
 	"net/url"
 	"sync"
+	"time"
 )
+
+const layout = "2006-01-02"
 
 // 404 response handler for all non supported function
 func notFound(w http.ResponseWriter, r *http.Request) {
@@ -24,19 +27,31 @@ func timegateHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 
+	// birth of the web...
+	date := "19910806000000"
+	uri := "http://info.cern.ch/"
+
 	if val, ok := query["date"]; ok {
-		log.Println(val[0])
-	}	
+		date = val[0]
+		t, err := time.Parse(layout, date)
+		if err != nil {
+			log.Println(err, "setting date to default")
+		} else {
+			date = t.Format(datelayout)
+			log.Println("date:", date)
+		}
+	}
 
 	if val, ok := query["url"]; ok {
-		log.Println(val[0])
-	}	
+		uri = val[0]
+		log.Println("requested:", uri)
+	}
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
-	response := timegate()
+	response := timegate(uri, date)
 	fmt.Fprintln(w, response)
-	memes = memes[:0]
+	memes = memes[:0] // clear memento list
 	return
 }
 
@@ -130,10 +145,10 @@ func DefaultServer(port string, wg *sync.WaitGroup) error {
 	middleWare := configureDefault()
 	err := http.ListenAndServe(":"+port, middleWare)
 	if err != nil {
-		return err
 		wg.Done()
+		return err
 	}
 	wg.Done()
 	return nil
-	
+
 }

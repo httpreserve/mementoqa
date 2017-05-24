@@ -62,12 +62,14 @@
 				xmlhttp.open("POST", "timegate", true);
 				xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
 				xmlhttp.send(key + "=" + value);
+				query = "";
 				return;
 			}
 	
 			if (method.toLowerCase() == "get") {
 				xmlhttp.open("GET", "timegate?" + query, true);
 				xmlhttp.send();
+				query = "";
 				return;
 			}
 	

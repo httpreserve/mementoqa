@@ -6,4 +6,4 @@ On [HTTPreserve.info:8080](http://httpreserve.info:8080/)
 
 ### Example
 
-<img id="logo" src="https://github.com/httpreserve/mementoqa/raw/master/src/sample.png" alt="mementoqa"/>
+![mementoqa](https://github.com/httpreserve/mementoqa/blob/main/src/sample.png)
